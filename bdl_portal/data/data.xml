@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+
+    <!-- <record id="module_category_portal" model="ir.module.category"> -->
+    <!--   <field name="name">Portal Type</field> -->
+    <!--   <field name="sequence" eval="20"/> -->
+    <!-- </record> -->
+
+    <record id="group_portal_admin" model="res.groups">
+      <!-- <field name="category_id" ref="module_category_portal"/> -->
+      <field name="name">Portal Client Admin</field>
+      <field name="implied_ids" eval="[(6, 0, [ref('base.group_portal')])]"/>
+    </record>
+
+    <!-- add custom_text_field to this formbuilder whitelist
+	 otherwise form won't recognize this field =.= -->
+    <function model="ir.model.fields" name="formbuilder_whitelist">
+      <value>sale.order</value>
+      <value eval="['client_order_ref', 'shipping_instructions']"/>
+    </function>
+  </data>
+</odoo>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="product_configurator_configure_optional_products_bdl" inherit_id="sale.product_configurator_configure_optional_products">
+    <xpath expr="//tr[@t-if='product.optional_product_ids']" position="before">
+      <t t-set="valid_products" t-value="set()"/>
+      <t t-if="not product.env.user.has_group('base.group_user')">
+  	<t t-set="pricelist_id" t-value="product.env.user.partner_id.property_product_pricelist"/>
+  	<t t-set="valid_products" t-value="pricelist_id.get_related_product_tmpl_ids()"/>
+      </t>
+    </xpath>
+    
+    <xpath expr="//tr[@t-if='product.optional_product_ids']" position="attributes">
+      <attribute name="t-if">product.optional_product_ids and (any([p for p in product.optional_product_ids if p.id in valid_products]) if valid_products else True) </attribute>
+    </xpath>
+  </template>
+
+
+  <template id="optional_product_items_bdl" inherit_id="sale.optional_product_items">
+    <xpath expr="//t[@t-if='product._is_add_to_cart_possible(parent_combination)']" position="attributes">
+      <attribute name="t-if">product._is_add_to_cart_possible(parent_combination) and (product.id in valid_products if valid_products else True) </attribute>
+    </xpath>
+  </template>
+  
+   <template id="payment_bdl" inherit_id="website_sale.payment">
+    
+    <xpath expr="//div[@id='shipping_and_billing']/a" position="attributes">
+      <attribute name="groups">bdl_portal.group_portal_admin,base.group_user</attribute>
+    </xpath>
+  </template>
+
+  <template id="address_kanban_bdl" inherit_id="website_sale.address_kanban">
+    <xpath expr="//div[hasclass('card-body')]/a" position="attributes">
+      <attribute name="groups">bdl_portal.group_portal_admin,base.group_user</attribute>
+    </xpath>
+  </template>
+  
+  <template id="checkout_bdl" inherit_id="website_sale.checkout">
+    
+    <xpath expr="//div[hasclass('all_shipping')][1]/div[1]/div[1]/div[1]/form[1]" position="attributes">
+      <attribute name="groups">bdl_portal.group_portal_admin,base.group_user</attribute>
+    </xpath>
+
+    <xpath expr="//t[@t-if='not only_services']/../div[1]/div[1]" position="replace"/>
+
+
+    <xpath expr="//t[@t-if='not only_services']/../div[1]" position="before">
+      <div class="row">
+	<div class="col-lg-12">
+	  <h3 class="o_page_header mt8">Billing Address</h3>
+	</div>
+      </div>
+      <div class="row" groups="bdl_portal.group_portal_admin,base.group_user">
+	<div class="col-lg-12">
+	  <div class="row mt8">
+	    <div class="col-md-12 col-lg-12">
+	      <form action="/shop/address?new_billing=1" method="post" class=''>
+		<input type="hidden" name="csrf_token" t-att-value="request.csrf_token()" />
+		<a role="button" href="#" class='a-submit btn btn-secondary mb16 btn-block'>
+		  <i class="fa fa-plus-square"/>
+		  <span>Add an address</span>
+		</a>
+	      </form>
+	    </div>
+	  </div>
+	</div>
+      </div>
+    </xpath>
+  </template>
+
+  <template id="extra_info_bdl" inherit_id="website_sale.extra_info">
+    <xpath expr="//form/div[1]" position="before">
+      <div class="form-group row form-field o_website_form_custom">
+	<div class="col-lg-3 col-md-4 text-md-right">
+	  <label class="col-form-label" for="shipping_instructions">Shipping Instructions</label>
+	</div>
+	<div class="col-lg-9 col-md-8">
+	  <textarea class="form-control o_website_form_input" rows="8" name="shipping_instructions"/>
+	</div>
+      </div>
+    </xpath>
+  </template>
+
+</odoo>
