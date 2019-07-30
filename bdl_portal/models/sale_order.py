@@ -7,4 +7,4 @@ from odoo.exceptions import UserError, ValidationError
 class SaleOrder(models.Model):
     _inherit = "sale.order"
     
-    shipping_instructions = fields.Text('Shipping Instructions')
+    shipping_instructions = fields.Text('Shipping Instructions', track_visibility='onchange')

@@ -10,6 +10,10 @@ from odoo.addons.website.controllers.main import QueryURL
 
 class WebsiteSale(WebsiteSale):
 
+    ####################################################
+    # products by pricelist to current request env user 
+    ###################################################
+    
     def _valid_product_tmpl_ids_based_on_pricelist(self):
         # when user is public, they should see only products that are included in the public pricelist
         pricelist_id = request.env.ref('product.list0')
@@ -44,67 +48,57 @@ class WebsiteSale(WebsiteSale):
         else:
             return products
 
-    # @http.route(['/shop/product/<model("product.template"):product>'], type='http', auth="public", website=True)
-    # def product(self, product, category='', search='', **kwargs):
-    #     if not product.can_access_from_current_website():
-    #         raise NotFound()
+    #####################################
+    # billing address editing and adding
+    #####################################
 
-    #     add_qty = int(kwargs.get('add_qty', 1))
+    # modify checkout values so that billing contacts are displayed just as shipping
+    def checkout_values(self, **kw):
+        values = super(WebsiteSale, self).checkout_values(**kw)
+        order = request.website.sale_get_order()  # no need to force create since it was created in the super
+        billings = []
 
-    #     product_context = dict(request.env.context, quantity=add_qty,
-    #                            active_id=product.id,
-    #                            partner=request.env.user.partner_id)
-    #     ProductCategory = request.env['product.public.category']
+        if order.partner_id != request.website.user_id.sudo().partner_id:            
+            Partner = order.partner_id.with_context(show_address=1).sudo()
+            billings = Partner.search([
+                ("id", "child_of", order.partner_id.commercial_partner_id.ids),
+                '|', ("type", "in", ["invoice", "contact"]), ("id", "=", order.partner_id.commercial_partner_id.id)
+            ], order='id desc')
+            if billings:
+                if kw.get('partner_id'):
+                    partner_id = int(kw.get('partner_id'))
+                    if partner_id in billings.mapped('id'):
+                        order.partner_invoice_id = partner_id
+        values.update({'billings': billings})
+        return values
 
-    #     if category:
-    #         category = ProductCategory.browse(int(category)).exists()
+    def _checkout_form_save(self, mode, checkout, all_values):
+        Partner = request.env['res.partner']
+        partner_id = False
+        if mode == ('add', 'billing'):
+            partner_id = int(all_values.get('partner_id', 0))
+            if partner_id:
+                partner_invoice_id = False
+                # this means we have to create a new billing address
+                if partner_id == -1:
+                    partner_invoice_id = Partner.sudo().create(checkout).id
+                else:
+                    partner_invoice_id = partner_id
+                    Partner.browse(partner_invoice_id).sudo().write(checkout) # update our existing invoice
+                # order = request.website.sale_get_order()
+                # order.sudo().write({'partner_invoice_id': partner_invoice_id})
+        else:
+            partner_id = super(WebsiteSale, self)._checkout_form_save(mode, checkout, all_values)
+        return partner_id
 
-    #     attrib_list = request.httprequest.args.getlist('attrib')
-    #     attrib_values = [[int(x) for x in v.split("-")] for v in attrib_list if v]
-    #     attrib_set = {v[1] for v in attrib_values}
-
-    #     keep = QueryURL('/shop', category=category and category.id, search=search, attrib=attrib_list)
-
-    #     categs = ProductCategory.search([('parent_id', '=', False)])
-
-    #     pricelist = request.website.get_current_pricelist()
-
-    #     def compute_currency(price):
-    #         return product.currency_id._convert(price, pricelist.currency_id, product._get_current_company(pricelist=pricelist, website=request.website), fields.Date.today())
-
-    #     if not product_context.get('pricelist'):
-    #         product_context['pricelist'] = pricelist.id
-    #         product = product.with_context(product_context)
-
-    #     # thie line is added by ehe
-    #     valid_product_tmpl_ids = self._valid_product_tmpl_ids_based_on_pricelist()
-            
-    #     values = {
-    #         'search': search,
-    #         'category': category,
-    #         'pricelist': pricelist,
-    #         'attrib_values': attrib_values,
-    #         # compute_currency deprecated, get from product
-    #         'compute_currency': compute_currency,
-    #         'attrib_set': attrib_set,
-    #         'keep': keep,
-    #         'categories': categs,
-    #         'main_object': product,
-    #         'product': product,
-    #         'add_qty': add_qty,
-    #         'optional_product_ids': [p.with_context({'active_id': p.id}) for p in product.optional_product_ids if p.id in valid_product_tmpl_ids],  # this line is modified to filter out invalid products based on our pricelist rule
-    #         # get_attribute_exclusions deprecated, use product method
-    #         'get_attribute_exclusions': self._get_attribute_exclusions,
-    #     }
-    #     return request.render("website_sale.product", values)
-
+    def values_postprocess(self, order, mode, values, errors, error_msg):
+        values, errors, error_msg = super(WebsiteSale, self).values_postprocess(order, mode, values, errors, error_msg)
+        if mode == ('add', 'billing'):
+            values.update({'type': 'invoice', 'parent_id': order.partner_id.commercial_partner_id.id})
+        return values, errors, error_msg
     
-    @http.route(['/shop/address'], type='http', methods=['GET', 'POST'], auth="public", website=True)
-    def address(self, new_billing=False, **kw):
-        if not new_billing:
-            print(kw)
-            return super(WebsiteSale, self).address(**kw)
-
+    @http.route(['/shop/address_add_billing'], type='http', methods=['GET', 'POST'], auth="public", website=True)
+    def address_add_billing(self, **kw):
         Partner = request.env['res.partner'].with_context(show_address=1).sudo()
         order = request.website.sale_get_order()
 
@@ -112,32 +106,22 @@ class WebsiteSale(WebsiteSale):
         if redirection:
             return redirection
 
-        mode = (False, False)
-        can_edit_vat = False
-        def_country_id = order.partner_id.country_id
+        mode = ('add', 'billing')
+        country_code = request.session['geoip'].get('country_code')
+        def_country_id = False
+        if country_code:
+            def_country_id = request.env['res.country'].search([('code', '=', country_code)], limit=1)
+        else:
+            def_country_id = request.website.user_id.sudo().country_id
         values, errors = {}, {}
 
         partner_id = int(kw.get('partner_id', -1))
-
-        print(request.website.user_id)
-        print(partner_id)
-        print(kw)
-        print(new_billing)
-        
-
-        # IF PUBLIC ORDER
-        if order.partner_id.id != request.website.user_id.sudo().partner_id.id and partner_id == -1:
-            print('laaaaaaaaaaaaaaaaaaaaaaaaaaaaaa new billing')
-            mode = ('new', 'billing')
-            can_edit_vat = True
-            country_code = request.session['geoip'].get('country_code')
-            if country_code:
-                def_country_id = request.env['res.country'].search([('code', '=', country_code)], limit=1)
-            else:
-                def_country_id = request.website.user_id.sudo().country_id
+        if partner_id and partner_id != -1:
+            values = Partner.browse(partner_id)
         
         # IF POSTED
         if 'submitted' in kw:
+
             pre_values = self.values_preprocess(order, mode, kw)
             errors, error_msg = self.checkout_form_validate(mode, kw, pre_values)
             post, errors, error_msg = self.values_postprocess(order, mode, pre_values, errors, error_msg)
@@ -147,16 +131,16 @@ class WebsiteSale(WebsiteSale):
                 values = kw
             else:
                 partner_id = self._checkout_form_save(mode, post, kw)
-                if mode[1] == 'billing':
+                
+                if mode[0] == 'add' and partner_id and partner_id != -1:
                     order.partner_invoice_id = partner_id
-                    # order.onchange_partner_id()
-                    if not kw.get('use_same'):
-                        kw['callback'] = kw.get('callback') or \
-                            (not order.only_services and (mode[0] == 'edit' and '/shop/checkout' or '/shop/address'))
-                elif mode[1] == 'shipping':
-                    order.partner_shipping_id = partner_id
-
-                order.message_partner_ids = [(4, partner_id), (3, request.website.partner_id.id)]
+                    # print(order.partner_id, order.partner_invoice_id)
+                    # order.partner_id = partner_id
+                # order.onchange_partner_id()
+                if not kw.get('use_same'):
+                    kw['callback'] = kw.get('callback') or \
+                        (not order.only_services and (mode[0] in ['edit', 'add'] and '/shop/checkout' or '/shop/address_add_billing'))    
+                order.message_partner_ids = [(4, partner_id)]
                 if not errors:
                     return request.redirect(kw.get('callback') or '/shop/confirm_order')
 
@@ -167,12 +151,21 @@ class WebsiteSale(WebsiteSale):
             'partner_id': partner_id,
             'mode': mode,
             'checkout': values,
-            'can_edit_vat': can_edit_vat,
+            'can_edit_vat': True,
             'country': country,
             'countries': country.get_website_sale_countries(mode=mode[1]),
             "states": country.get_website_sale_states(mode=mode[1]),
             'error': errors,
             'callback': kw.get('callback'),
             'only_services': order and order.only_services,
+            'add_billing': 1,
+            
         }
         return request.render("website_sale.address", render_values)
+
+    @http.route(['/shop/address'], type='http', methods=['GET', 'POST'], auth="public", website=True)
+    def address(self, **kw):
+        if not kw.get('add_billing'):
+            return super(WebsiteSale, self).address(**kw)
+        else:
+            return self.address_add_billing(**kw)

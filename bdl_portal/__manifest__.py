@@ -26,6 +26,7 @@ Sales reps on the backend have no restriction to add produts not associated to a
         'data/data.xml',
         'wizard/portal_wizard_views.xml',
         'views/website_sale_templates.xml',
+        'views/portal_templates.xml',
         'views/sale_order_views.xml',
     ],
 }
