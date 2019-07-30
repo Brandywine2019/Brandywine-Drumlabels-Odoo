@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': ': BDL: Portal Changes',
+    'name': 'BDL: Portal Changes',
     'summary': 'Brandywine Drum Labels: Portal Address & Product Access',
     'description': """
 task id: 2029052
