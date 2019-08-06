@@ -70,6 +70,13 @@ class WebsiteSale(WebsiteSale):
                     if partner_id in billings.mapped('id'):
                         order.partner_invoice_id = partner_id
         values.update({'billings': billings})
+
+        current_user = request.website.user_id
+        if not current_user.has_group('bdl_portal.group_portal_admin') and not current_user.has_group('base.group_user') and not current_user.has_group('base.group_public'):
+            if order.partner_shipping_id:
+                values.update({'shippings': [order.partner_shipping_id]})
+            if order.partner_invoice_id:
+                values.update({'billings': [order.partner_invoice_id]})
         return values
 
     def _checkout_form_save(self, mode, checkout, all_values):
