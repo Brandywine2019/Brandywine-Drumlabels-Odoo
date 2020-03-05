@@ -88,6 +88,7 @@ Requirement 4:
         # 'security/ir.model.access.csv',
         'views/sale_order_views.xml',
         # 'views/templates.xml',
+        'views/website_templates.xml',
     ],
     'license': 'OEEL-1',
 }
