@@ -10,9 +10,7 @@ class StripeController(StripeController):
 
     @http.route(['/payment/stripe/create_charge'], type='json', auth='public')
     def stripe_create_charge(self, **post):
-        # res = super(StripeController, self).stripe_create_charge(**post)
         # Override the charge creation in the stripe payment controller
-        print("WE reached inside the controller")
         TX = request.env['payment.transaction']
         tx = None
         if post.get('tx_ref'):
@@ -24,7 +22,6 @@ class StripeController(StripeController):
         if not tx:
             raise werkzeug.exceptions.NotFound()
         stripe_token = post['token']
-        # response = None
         if tx.partner_id:
             payment_token_id = request.env['payment.token'].sudo().create({
                 'acquirer_id': tx.acquirer_id.id,
@@ -35,16 +32,8 @@ class StripeController(StripeController):
 
         # cancel the related payment transaction that was created
         # The transaction will be created on invoice(?)
-        # tx._set_transaction_cancel()
-        # Clean context and session
-        # request.website.sale_reset()
-        # Remove the tx from session
-        # PaymentProcessing.remove_payment_transaction(tx)
-        # request.session.update({
-        #     'sale_order_id': False,
-        #     'sale_last_order_id': False,
-        #     'website_sale_current_pl': False,
-        # })
+        tx._set_transaction_cancel()
+        PaymentProcessing.remove_payment_transaction(tx)
         return '/shop/payment/validate_quote'
 
     # Mirror the existing /shop/payment/validate flow but we need to redirect differently
@@ -61,26 +50,13 @@ class StripeController(StripeController):
             order = request.env['sale.order'].sudo().browse(sale_order_id)
             assert order.id == request.session.get('sale_last_order_id')
 
-        if transaction_id:
-            tx = request.env['payment.transaction'].sudo().browse(transaction_id)
-            assert tx in order.transaction_ids()
-        elif order:
-            tx = order.get_portal_last_transaction()
-        else:
-            tx = None
-
-        if not order or (order.amount_total and not tx):
+        if not order:
             return request.redirect('/shop')
 
-        if order and not order.amount_total and not tx:
-            return request.redirect(order.get_portal_url())
-
+        # 'send' quote, we need quote to be set in sent stage for odoo to clear cart
+        order.state = 'sent'
         # clean context and session, then redirect to the confirmation page
         request.website.sale_reset()
-        if tx and tx.state == 'draft':
-            return request.redirect('/shop')
-
-        PaymentProcessing.remove_payment_transaction(tx)
         return request.redirect('/shop/confirmation_quote')
 
     # Render a different order confirm page if we are using CC transactions with token
