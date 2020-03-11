@@ -12,6 +12,7 @@
             <field name="pre_msg"><![CDATA[
 <p>Transfer information will be provided after choosing the payment aquirer.</p>]]>
             </field>
+            <field name="is_po_num">True</field>
         </record>
     </data>
 </odoo>

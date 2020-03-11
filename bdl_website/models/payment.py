@@ -14,6 +14,8 @@ class PaymentAcquirerPONumber(models.Model):
     _inherit = 'payment.acquirer'
 
     provider = fields.Selection(selection_add=[('po_number', 'PO Number')])
+    is_po_num = fields.Boolean(string='Enable PO Number',
+                               help='Check to enable PO Number Acceptance on Payment Acquirer')
 
     def po_number_get_form_action_url(self):
         return '/payment/po_number/feedback'

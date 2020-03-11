@@ -86,8 +86,9 @@ Requirement 4:
     'data': [
         'data/payment_acquirer_data.xml',
         # 'security/ir.model.access.csv',
+        'views/payment_templates.xml',
         'views/sale_order_views.xml',
-        # 'views/templates.xml',
+        'views/payment_views.xml',
         'views/website_templates.xml',
     ],
     'license': 'OEEL-1',
