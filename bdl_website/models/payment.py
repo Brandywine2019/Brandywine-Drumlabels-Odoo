@@ -59,8 +59,44 @@ class PONumberPaymentTransaction(models.Model):
 class AccountPayment(models.Model):
     _inherit = 'account.payment'
 
-    # Remove domain to show token that we saved earlier
-    # Customer will always save tokens in website
     payment_token_id = fields.Many2one('payment.token', string="Saved payment token",
-                                       domain="['|', ('acquirer_id.capture_manually', '=', False), ('partner_id', '=', partner_id)]",
+                                       domain=[('acquirer_id.capture_manually', '=', False)],
                                        help="Note that tokens from acquirers set to only authorize transactions (instead of capturing the amount) are not available.")
+
+    @api.onchange('invoice_ids', 'payment_method_id')
+    def onchange_invoice_ids(self):
+        result = {'domain': {}, 'value': {}, 'warning': {}}
+        if self.invoice_ids:
+            if self.payment_method_code == 'electronic' and len(self.invoice_ids.mapped('partner_id')) > 1:
+                raise UserError(
+                    _("You can not process payments for invoices belonging to multiple customers electronically."))
+            partners = self.invoice_ids.mapped('partner_id') | self.invoice_ids.mapped(
+                'partner_id.commercial_partner_id') | self.invoice_ids.mapped(
+                'partner_id.commercial_partner_id').mapped('child_ids')
+            if partners:
+                result['domain'].update({'payment_token_id': [('partner_id', 'in', partners.ids),
+                                                              ('acquirer_id.capture_manually', '=', False)]})
+        return result
+
+
+class AccountRegisterPayments(models.TransientModel):
+    _inherit = "account.register.payments"
+
+    payment_token_id = fields.Many2one('payment.token', string="Saved payment token",
+                                       domain=[('acquirer_id.capture_manually', '=', False)],
+                                       help="Note that tokens from acquirers set to only authorize transactions (instead of capturing the amount) are not available.")
+
+    @api.onchange('invoice_ids', 'payment_method_id')
+    def onchange_invoice_ids(self):
+        result = {'domain': {}, 'value': {}, 'warning': {}}
+        if self.invoice_ids:
+            if self.payment_method_code == 'electronic' and len(self.invoice_ids.mapped('partner_id')) > 1:
+                raise UserError(
+                    _("You can not process payments for invoices belonging to multiple customers electronically."))
+            partners = self.invoice_ids.mapped('partner_id') | self.invoice_ids.mapped(
+                'partner_id.commercial_partner_id') | self.invoice_ids.mapped(
+                'partner_id.commercial_partner_id').mapped('child_ids')
+            if partners:
+                result['domain'].update({'payment_token_id': [('partner_id', 'in', partners.ids),
+                                                              ('acquirer_id.capture_manually', '=', False)]})
+        return result
