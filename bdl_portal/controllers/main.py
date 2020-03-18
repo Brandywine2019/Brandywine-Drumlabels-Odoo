@@ -8,19 +8,20 @@ from odoo.tools.pycompat import izip
 from odoo import _, http
 from odoo.addons.website.controllers.main import QueryURL
 
+
 class WebsiteSale(WebsiteSale):
 
     ####################################################
     # products by pricelist to current request env user 
     ###################################################
-    
+
     def _valid_product_tmpl_ids_based_on_pricelist(self):
         # when user is public, they should see only products that are included in the public pricelist
         pricelist_id = request.env.ref('product.list0')
         if not request.env.user._is_public() and request.env.user.partner_id and request.env.user.partner_id.property_product_pricelist:
             pricelist_id = request.env.user.partner_id.property_product_pricelist
         return pricelist_id.get_related_product_tmpl_ids()  # this is a set of ids, not objects
-        
+
     def _get_domain_based_on_valid_product_tmpl_ids(self, valid_set, product_type='product.template'):
         if product_type == 'product.template':
             domain = [('id', 'in', list(valid_set))]
@@ -29,12 +30,13 @@ class WebsiteSale(WebsiteSale):
         else:
             domain = []
         return domain
-        
+
     def _get_search_domain(self, search, category, attrib_values):
         domain = super(WebsiteSale, self)._get_search_domain(search, category, attrib_values)
 
         if not request.env.user.has_group('base.group_user'):
-            additional_domain = self._get_domain_based_on_valid_product_tmpl_ids(self._valid_product_tmpl_ids_based_on_pricelist())
+            additional_domain = self._get_domain_based_on_valid_product_tmpl_ids(
+                self._valid_product_tmpl_ids_based_on_pricelist())
             if additional_domain:
                 domain += additional_domain
         return domain
@@ -57,21 +59,55 @@ class WebsiteSale(WebsiteSale):
         values = super(WebsiteSale, self).checkout_values(**kw)
         order = request.website.sale_get_order()  # no need to force create since it was created in the super
         billings = []
+        shippings = []
 
-        if order.partner_id != request.website.user_id.sudo().partner_id:            
+        if order.partner_id != request.website.user_id.sudo().partner_id:
             Partner = order.partner_id.with_context(show_address=1).sudo()
+
+            # Change shipping addresses by changing domain and resetting shippings
+            # (child of commercial id and of type delivery) OR parent contact
+            shippings = Partner.search([
+                '|', '&', ("id", "child_of", order.partner_id.commercial_partner_id.ids),
+                ("type", "in", ["delivery"]), ("id", "=", order.partner_id.parent_id.id)
+            ], order='id desc')
+
+            if shippings:
+                if kw.get('partner_id') or 'use_billing' in kw:
+                    if 'use_billing' in kw:
+                        partner_id = order.partner_id.id
+                    else:
+                        partner_id = int(kw.get('partner_id'))
+                    if partner_id in shippings.mapped('id'):
+                        order.partner_shipping_id = partner_id
+                elif not order.partner_shipping_id:
+                    last_order = request.env['sale.order'].sudo().search([("partner_id", "=", order.partner_id.id)],
+                                                                         order='id desc', limit=1)
+                    order.partner_shipping_id.id = last_order and last_order.id
+
+            # Billing with filter for invoice type and parent contact only
+            # (A AND B) OR (C)
+            # OR (A AND B) (C)
+            # OR (AND A B) (C)
+            # OR AND A B C
+            # (child of commercial id and of type invoice) OR parent contact
             billings = Partner.search([
-                ("id", "child_of", order.partner_id.commercial_partner_id.ids),
-                '|', ("type", "in", ["invoice", "contact"]), ("id", "=", order.partner_id.commercial_partner_id.id)
+                '|', '&', ("id", "child_of", order.partner_id.commercial_partner_id.ids),
+                ("type", "in", ["invoice"]), ("id", "=", order.partner_id.parent_id.id)
+                # '|', ("type", "in", ["invoice"]), ("id", "=", order.partner_id.commercial_partner_id.id)
+                # original line below
+                # '|', ("type", "in", ["invoice", "contact"]), ("id", "=", order.partner_id.commercial_partner_id.id)
             ], order='id desc')
             if billings:
                 if kw.get('partner_id'):
                     partner_id = int(kw.get('partner_id'))
                     if partner_id in billings.mapped('id'):
                         order.partner_invoice_id = partner_id
-        values.update({'billings': billings})
+        values.update({'billings': billings,
+                       'shippings': shippings})
 
-        if not order.partner_id.user_ids.filtered(lambda current_user: current_user.has_group('bdl_portal.group_portal_admin') or current_user.has_group('base.group_user') or current_user.has_group('base.group_public')):
+        if not order.partner_id.user_ids.filtered(
+                lambda current_user: current_user.has_group('bdl_portal.group_portal_admin') or current_user.has_group(
+                        'base.group_user') or current_user.has_group('base.group_public')):
             values.update({
                 'shippings': [order.partner_shipping_id or order.partner_id],
                 'billings': [order.partner_invoice_id or order.partner_id]
@@ -90,7 +126,7 @@ class WebsiteSale(WebsiteSale):
                     partner_invoice_id = Partner.sudo().create(checkout).id
                 else:
                     partner_invoice_id = partner_id
-                    Partner.browse(partner_invoice_id).sudo().write(checkout) # update our existing invoice
+                    Partner.browse(partner_invoice_id).sudo().write(checkout)  # update our existing invoice
                 # order = request.website.sale_get_order()
                 # order.sudo().write({'partner_invoice_id': partner_invoice_id})
         else:
@@ -102,7 +138,7 @@ class WebsiteSale(WebsiteSale):
         if mode == ('add', 'billing'):
             values.update({'type': 'invoice', 'parent_id': order.partner_id.commercial_partner_id.id})
         return values, errors, error_msg
-    
+
     @http.route(['/shop/address_add_billing'], type='http', methods=['GET', 'POST'], auth="public", website=True)
     def address_add_billing(self, **kw):
         Partner = request.env['res.partner'].with_context(show_address=1).sudo()
@@ -124,7 +160,7 @@ class WebsiteSale(WebsiteSale):
         partner_id = int(kw.get('partner_id', -1))
         if partner_id and partner_id != -1:
             values = Partner.browse(partner_id)
-        
+
         # IF POSTED
         if 'submitted' in kw:
 
@@ -137,7 +173,7 @@ class WebsiteSale(WebsiteSale):
                 values = kw
             else:
                 partner_id = self._checkout_form_save(mode, post, kw)
-                
+
                 if mode[0] == 'add' and partner_id and partner_id != -1:
                     order.partner_invoice_id = partner_id
                     # print(order.partner_id, order.partner_invoice_id)
@@ -145,12 +181,14 @@ class WebsiteSale(WebsiteSale):
                 # order.onchange_partner_id()
                 if not kw.get('use_same'):
                     kw['callback'] = kw.get('callback') or \
-                        (not order.only_services and (mode[0] in ['edit', 'add'] and '/shop/checkout' or '/shop/address_add_billing'))    
+                                     (not order.only_services and (mode[0] in ['edit',
+                                                                               'add'] and '/shop/checkout' or '/shop/address_add_billing'))
                 order.message_partner_ids = [(4, partner_id)]
                 if not errors:
                     return request.redirect(kw.get('callback') or '/shop/confirm_order')
 
-        country = 'country_id' in values and values['country_id'] != '' and request.env['res.country'].browse(int(values['country_id']))
+        country = 'country_id' in values and values['country_id'] != '' and request.env['res.country'].browse(
+            int(values['country_id']))
         country = country and country.exists() or def_country_id
         render_values = {
             'website_sale_order': order,
@@ -165,7 +203,7 @@ class WebsiteSale(WebsiteSale):
             'callback': kw.get('callback'),
             'only_services': order and order.only_services,
             'add_billing': 1,
-            
+
         }
         return request.render("website_sale.address", render_values)
 
