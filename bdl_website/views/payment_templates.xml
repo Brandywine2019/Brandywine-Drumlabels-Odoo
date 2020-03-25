@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="assets_frontend" name="bld website assets" inherit_id="website.assets_frontend">
+        <xpath expr="." position="inside">
+            <script type="text/javascript" src="/bdl_website/static/src/js/payment_form.js"></script>
+        </xpath>
+    </template>
+
+    <template id="payment_tokens_list_inherited_bdl" inherit_id="payment.payment_tokens_list">
+        <xpath expr="//input[@name='pm_id']" position="attributes">
+            <t t-if="acq.is_po_num">
+                <attribute name="t-att-data-is-po">acq.is_po_num</attribute>
+            </t>
+        </xpath>
+
+        <xpath expr="//ul[hasclass('float-right', 'list-inline', 'payment_icon_list')]" position="inside">
+            <t t-if="acq.is_po_num">
+                <div t-att-class="'form-group col-lg-5' if bootstrap_formatting else 'form-group'">
+                    <input type="text" name="po_num_val" id="po_num_val" class="form-control" placeholder="PO Number"
+                           t-att-data-is-po="acq.is_po_num" t-att-data-is-required="true"/>
+                </div>
+            </t>
+        </xpath>
+    </template>
+</odoo>

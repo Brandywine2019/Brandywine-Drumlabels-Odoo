@@ -8,6 +8,10 @@ odoo.define('bdl_portal.website_sale_cart', function(require) {
 	read_events: {
 	    'click .js_change_billing': '_onClickChangeBilling',
 	    'click .js_add_billing': '_onClickAddBillingAddress',
+	    'change input:radio[name="bill"]': '_onClickChangeList',
+	    'change input:radio[name="ship"]': '_onClickChangeList',
+	    'click .js_edit_billing_list': '_onClickEditBillingList',
+	    'click .js_edit_shipping_list': '_onClickEditShippingList',
 	},
 
 	//--------------------------------------------------------------------------
@@ -34,8 +38,23 @@ odoo.define('bdl_portal.website_sale_cart', function(require) {
 	},
 
 	_onClickAddBillingAddress: function (ev) {
-            ev.preventDefault();
-            $(ev.currentTarget).closest('div.one_kanban').find('form.d-none').attr('action', '/shop/address_add_billing').submit();
+        ev.preventDefault();
+        $(ev.currentTarget).closest('div.one_kanban').find('form.d-none').attr('action', '/shop/address_add_billing').submit();
+    },
+
+    _onClickChangeList: function (ev) {
+        var $form = $(ev.currentTarget).closest('tr.one_list_row').find('form.d-none');
+	    $.post($form.attr('action'), $form.serialize()+'&xhr=1');
+    },
+
+    _onClickEditBillingList: function (ev) {
+        ev.preventDefault();
+        $(ev.currentTarget).closest('td.one_list').find('form.d-none').attr('action', '/shop/address_add_billing').submit();
+    },
+
+    _onClickEditShippingList: function (ev) {
+        ev.preventDefault();
+        $(ev.currentTarget).closest('td.one_list').find('form.d-none').attr('action', '/shop/address').submit();
     },
 });
 });
