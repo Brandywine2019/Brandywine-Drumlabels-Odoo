@@ -38,14 +38,12 @@ odoo.define('bdl_portal.website_sale_cart', function(require) {
 	},
 
 	_onClickAddBillingAddress: function (ev) {
-            ev.preventDefault();
-            $(ev.currentTarget).closest('div.one_kanban').find('form.d-none').attr('action', '/shop/address_add_billing').submit();
+        ev.preventDefault();
+        $(ev.currentTarget).closest('div.one_kanban').find('form.d-none').attr('action', '/shop/address_add_billing').submit();
     },
 
     _onClickChangeList: function (ev) {
-        var $row = $(ev.currentTarget).closest('tr.one_list_row')
-        var $form = $row.find('form.d-none');
-        var action = $form.attr('action')
+        var $form = $(ev.currentTarget).closest('tr.one_list_row').find('form.d-none');
 	    $.post($form.attr('action'), $form.serialize()+'&xhr=1');
     },
 

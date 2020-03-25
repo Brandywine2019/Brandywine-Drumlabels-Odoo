@@ -54,6 +54,17 @@ class WebsiteSale(WebsiteSale):
     # billing address editing and adding
     #####################################
 
+    # Create the domain for the address search
+    def _get_address_domain(self, search):
+        domain = []
+        if search:
+            for srch in search.split(" "):
+                domain += [
+                    '|', '|', '|', '|', ('name', 'ilike', srch), ('street', 'ilike', srch),
+                    ('street2', 'ilike', srch), ('city', 'ilike', srch), ('zip', 'ilike', srch),
+                ]
+        return domain
+
     # modify checkout values so that billing contacts are displayed just as shipping
     def checkout_values(self, **kw):
         values = super(WebsiteSale, self).checkout_values(**kw)
@@ -66,10 +77,13 @@ class WebsiteSale(WebsiteSale):
 
             # Change shipping addresses by changing domain and resetting shippings
             # (child of commercial id and of type delivery) OR parent contact
+
+            ship_search = kw.get('ship_search', [])
+            ship_domain = self._get_address_domain(ship_search)
             shippings = Partner.search([
                 '|', '&', ("id", "child_of", order.partner_id.commercial_partner_id.ids),
                 ("type", "in", ["delivery"]), ("id", "=", order.partner_id.parent_id.id)
-            ], order='id desc')
+            ] + ship_domain, order='id desc')
 
             if shippings:
                 if kw.get('partner_id') or 'use_billing' in kw:
@@ -90,27 +104,32 @@ class WebsiteSale(WebsiteSale):
             # OR (AND A B) (C)
             # OR AND A B C
             # (child of commercial id and of type invoice) OR parent contact
+            bill_search = kw.get('bill_search', [])
+            bill_domain = self._get_address_domain(bill_search)
+            # billings = Partner.search(search_domain)
             billings = Partner.search([
                 '|', '&', ("id", "child_of", order.partner_id.commercial_partner_id.ids),
                 ("type", "in", ["invoice"]), ("id", "=", order.partner_id.parent_id.id)
                 # '|', ("type", "in", ["invoice"]), ("id", "=", order.partner_id.commercial_partner_id.id)
                 # original line below
                 # '|', ("type", "in", ["invoice", "contact"]), ("id", "=", order.partner_id.commercial_partner_id.id)
-            ], order='id desc')
+            ] + bill_domain, order='id desc')
             if billings:
                 if kw.get('partner_id'):
                     partner_id = int(kw.get('partner_id'))
                     if partner_id in billings.mapped('id'):
                         order.partner_invoice_id = partner_id
         values.update({'billings': billings,
-                       'shippings': shippings})
+                       'shippings': shippings,
+                       'bill_search': bill_search,
+                       'ship_search': ship_search})
 
         if not order.partner_id.user_ids.filtered(
                 lambda current_user: current_user.has_group('bdl_portal.group_portal_admin') or current_user.has_group(
                         'base.group_user') or current_user.has_group('base.group_public')):
             values.update({
                 'shippings': [order.partner_shipping_id or order.partner_id],
-                'billings': [order.partner_invoice_id or order.partner_id]
+                'billings': [order.partner_invoice_id or order.partner_id],
             })
         return values
 

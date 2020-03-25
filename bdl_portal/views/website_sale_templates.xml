@@ -40,8 +40,7 @@
         </xpath>
 
         <xpath expr="//t[@t-set='same_shipping']" position="attributes">
-            <attribute name="t-value">bool(order.partner_shipping_id==order.partner_invoice_id or only_services) if
-                order.partner_invoice_id else bool(order.partner_shipping_id==order.partner_id or only_services)
+            <attribute name="t-value">bool(order.partner_shipping_id==order.partner_invoice_id or only_services) if order.partner_invoice_id else bool(order.partner_shipping_id==order.partner_id or only_services)
             </attribute>
         </xpath>
 
@@ -139,6 +138,38 @@
         </xpath>
     </template>
 
+    <template id="bill_address_search" name="Address Search Box">
+        <form action="/shop/checkout" method="get"
+              t-att-class="_classes">
+            <div class="input-group">
+                <input type="text" name="bill_search" class="search-query form-control oe_search_box"
+                       placeholder="Search..."
+                       t-att-value="bill_search"/>
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-secondary oe_search_button" aria-label="Search" title="Search">
+                        <i class="fa fa-search"/>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </template>
+
+    <template id="ship_address_search" name="Address Search Box">
+        <form action="/shop/checkout" method="get"
+              t-att-class="_classes">
+            <div class="input-group">
+                <input type="text" name="ship_search" class="search-query form-control oe_search_box"
+                       placeholder="Search..."
+                       t-att-value="ship_search"/>
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-secondary oe_search_button" aria-label="Search" title="Search">
+                        <i class="fa fa-search"/>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </template>
+
     <template id="checkout_bdl" inherit_id="website_sale.checkout">
 
         <xpath expr="//div[hasclass('all_shipping')][1]/div[1]/div[1]/div[1]/form[1]" position="attributes">
@@ -154,6 +185,11 @@
                     <h3 class="o_page_header mt8">Billing Address</h3>
                 </div>
             </div>
+            <div class="address_search_box">
+                <t t-call="bdl_portal.bill_address_search">
+                    <t t-set="_classes">o_website_sale_search</t>
+                </t>
+            </div>
             <div class="row all_billing">
                 <div class="col-lg-12">
                     <div class="row mt8">
@@ -168,22 +204,6 @@
                             </form>
                         </div>
 
-
-                        <!--                        <ul class="list-unstyled">-->
-                        <!--                            <t t-foreach="billings" t-as="bill"-->
-                        <!--                               class="custom-control custom-radio">-->
-                        <!--                                <li class="form-group">-->
-                        <!--                                    <div class="radio_input_value">-->
-                        <!--                                        <input type="radio" name="bill"/>-->
-                        <!--                                        <label label-default="label-default">-->
-                        <!--                                            &lt;!&ndash;                                <span t-esc="bill" t-options="dict(widget='contact', fields=['name', 'address'], no_marker=True)"/>&ndash;&gt;-->
-                        <!--                                            <span t-esc="bill"/>-->
-                        <!--                                        </label>-->
-                        <!--                                    </div>-->
-                        <!--                                </li>-->
-
-                        <!--                            </t>-->
-                        <!--                        </ul>-->
                         <!-- Code replacing kanban view to list view-->
                         <div class="radio_input_value col-md-12 col-lg-12">
                             <table class="table table-sm">
@@ -311,6 +331,14 @@
                 </table>
             </div>
         </xpath>
+
+        <xpath expr="//div[hasclass('row', 'all_shipping')]" position="before">
+            <div class="address_search_box">
+                <t t-call="bdl_portal.ship_address_search">
+                    <t t-set="_classes">o_website_sale_search</t>
+                </t>
+            </div>
+        </xpath>
     </template>
 
     <template id="extra_info_bdl" inherit_id="website_sale.extra_info">
@@ -320,109 +348,9 @@
                     <label class="col-form-label" for="shipping_instructions">Shipping Instructions</label>
                 </div>
                 <div class="col-lg-9 col-md-8">
-                    <textarea class="form-control o_website_form_input" rows="8" name="shipping_instructions"/>
+                    <textarea class="form-control o_website_fsingaporeorm_input" rows="8" name="shipping_instructions"/>
                 </div>
             </div>
         </xpath>
     </template>
-
-    <!--Template for list view of contacts-->
-    <template id="list_contact">
-        <address t-ignore="true" class="mb0" itemscope="itemscope" itemtype="http://schema.org/Organization">
-            <div t-if="not (('name' in fields) or (address and 'address' in fields) or (city and 'city' in fields) or (mobile and 'mobile' in fields) or (website and 'website' in fields) or (email and 'email' in fields))"
-                 class="css_non_editable_mode_hidden">
-                --<span class="text-muted" t-esc="name"/>--
-            </div>
-            <t t-if="object.country_id.name_position != 'after'">
-                <t t-call="base.contact_name"/>
-            </t>
-            <div itemprop="address" itemscope="itemscope" itemtype="http://schema.org/PostalAddress">
-                <div t-if="address and 'address' in fields">
-                    <i t-if="not options.get('no_marker')" class='fa fa-map-marker fa-fw' role="img"
-                       aria-label="Address" title="Address"/>
-                    <span itemprop="streetAddress"
-                          t-raw="address.replace('\n', options.get('no_tag_br') and ', ' or ('&lt;br/&gt;%s' % ('' if options.get('no_marker') else '')))"/>
-                </div>
-                <div t-if="city and 'city' in fields">
-                    <i t-if="not options.get('no_marker')" class='fa fa-map-marker fa-fw' role="img"
-                       aria-label="Address" title="Address"/>
-                    <span itemprop="addressLocality" t-esc="city"/>,
-                    <span itemprop="addressCountry" t-esc="country_id"/>
-                </div>
-                <div t-if="phone and 'phone' in fields">
-                    <i t-if="not options.get('no_marker') or options.get('phone_icons')" class='fa fa-phone fa-fw'
-                       role="img" aria-label="Phone" title="Phone"/>
-                    <span class="o_force_ltr" itemprop="telephone" t-esc="phone"/>
-                </div>
-                <div t-if="mobile and 'mobile' in fields">
-                    <i t-if="not options.get('no_marker') or options.get('phone_icons')" class='fa fa-mobile fa-fw'
-                       role="img" aria-label="Mobile" title="Mobile"/>
-                    <span class="o_force_ltr" itemprop="telephone" t-esc="mobile"/>
-                </div>
-                <div t-if="fax and 'fax' in fields">
-                    <i t-if="not options.get('no_marker') or options.get('phone_icons')" class='fa fa-fax fa-fw'
-                       role="img" aria-label="Fax" title="Fax"/>
-                    <span class="o_force_ltr" itemprop="faxNumber" t-esc="fax"/>
-                </div>
-                <div t-if="website and 'website' in fields">
-                    <i t-if="not options.get('no_marker')" class='fa fa-globe' role="img" aria-label="Website"
-                       title="Website"/>
-                    <a t-att-href="website and '%s%s' % ('http://' if '://' not in website else '',website)">
-                        <span itemprop="website" t-esc="website"/>
-                    </a>
-                </div>
-                <div t-if="email and 'email' in fields">
-                    <i t-if="not options.get('no_marker')" class='fa fa-envelope fa-fw' role="img" aria-label="Email"
-                       title="Email"/>
-                    <span itemprop="email" t-esc="email"/>
-                </div>
-            </div>
-            <t t-if="object.country_id and object.country_id.name_position == 'after'">
-                <t t-call="base.contact_name"/>
-            </t>
-        </address>
-    </template>
-
-    <!--List view for Address in checkout-->
-    <template id="address_list_bdl" name="List Address">
-        <form action="/shop/checkout" method="POST" class="d-none">
-            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-            <input type="hidden" name="partner_id" t-att-value="contact.id"/>
-            <t t-if='edit_billing'>
-                <input type="hidden" name="callback" value="/shop/checkout?use_billing"/>
-            </t>
-            <input type='submit'/>
-        </form>
-
-        <div class="address_item">
-            <ul>
-
-            </ul>
-        </div>
-
-        <div t-attf-class="card #{selected and 'border_primary' or 'js_change_shipping'}">
-            <div class='card-body' style='min-height: 130px;'>
-                <a t-if="not actual_partner or (ship.id in actual_partner.child_ids.ids)" href="#"
-                   class="btn btn-link float-right p-0 js_edit_address no-decoration" role="button"
-                   title="Edit this address" aria-label="Edit this address">
-                    <i class='fa fa-edit'/>
-                </a>
-                <t t-esc="contact" t-options="dict(widget='contact', fields=['name', 'address'], no_marker=True)"/>
-            </div>
-            <div class='card-footer' t-if='not readonly'>
-                <span class='btn-ship' t-att-style="'' if selected else 'display:none;'">
-                    <a role="button" href='#' class="btn btn-block btn-primary">
-                        <i class='fa fa-check'></i>
-                        Ship to this address
-                    </a>
-                </span>
-                <span class='btn-ship' t-att-style="'' if not selected else 'display:none;'">
-                    <a role="button" href='#' class="btn btn-block btn-secondary">
-                        Select this address
-                    </a>
-                </span>
-            </div>
-        </div>
-    </template>
-
 </odoo>

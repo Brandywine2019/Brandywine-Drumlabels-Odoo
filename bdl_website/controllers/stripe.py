@@ -7,7 +7,6 @@ from odoo.addons.payment.controllers.portal import PaymentProcessing
 
 
 class StripeController(StripeController):
-
     @http.route(['/payment/stripe/create_charge'], type='json', auth='public')
     def stripe_create_charge(self, **post):
         # Override the charge creation in the stripe payment controller

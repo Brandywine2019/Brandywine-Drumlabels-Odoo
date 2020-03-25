@@ -11,4 +11,3 @@ class SaleOrder(models.Model):
                                   selection=[('Credit Card', 'Credit Card'),
                                              ('Customer PO', 'Customer PO'),
                                              ('Signature Authorization', 'Signature Authorization')])
-

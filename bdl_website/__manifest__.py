@@ -85,7 +85,6 @@ Requirement 4:
     # always loaded
     'data': [
         'data/payment_acquirer_data.xml',
-        # 'security/ir.model.access.csv',
         'views/payment_templates.xml',
         'views/sale_order_views.xml',
         'views/payment_views.xml',
