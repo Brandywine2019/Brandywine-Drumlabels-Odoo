@@ -21,7 +21,7 @@ Sales reps on the backend have no restriction to add produts not associated to a
     'license': 'OEEL-1',
     'author': 'Odoo Inc',
     'version': '0.1',
-    'depends': ['sale_management', 'website_sale'],
+    'depends': ['sale_management', 'website_sale', 'website_sale_delivery'],
     'data': [
         'data/data.xml',
         'wizard/portal_wizard_views.xml',

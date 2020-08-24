@@ -83,7 +83,7 @@ class WebsiteSale(WebsiteSale):
             shippings = Partner.search([
                 '|', '&', ("id", "child_of", order.partner_id.commercial_partner_id.ids),
                 ("type", "in", ["delivery"]), ("id", "=", order.partner_id.parent_id.id)
-            ] + ship_domain, order='id desc')
+            ] + ship_domain, limit=6, order='id desc')
 
             if shippings:
                 if kw.get('partner_id') or 'use_billing' in kw:
@@ -113,16 +113,18 @@ class WebsiteSale(WebsiteSale):
                 # '|', ("type", "in", ["invoice"]), ("id", "=", order.partner_id.commercial_partner_id.id)
                 # original line below
                 # '|', ("type", "in", ["invoice", "contact"]), ("id", "=", order.partner_id.commercial_partner_id.id)
-            ] + bill_domain, order='id desc')
+            ] + bill_domain, limit=6, order='id desc')
             if billings:
                 if kw.get('partner_id'):
                     partner_id = int(kw.get('partner_id'))
                     if partner_id in billings.mapped('id'):
                         order.partner_invoice_id = partner_id
+
+            values.update({'bill_search': bill_search,
+                           'ship_search': ship_search})
+
         values.update({'billings': billings,
-                       'shippings': shippings,
-                       'bill_search': bill_search,
-                       'ship_search': ship_search})
+                       'shippings': shippings})
 
         if not order.partner_id.user_ids.filtered(
                 lambda current_user: current_user.has_group('bdl_portal.group_portal_admin') or current_user.has_group(
@@ -232,3 +234,15 @@ class WebsiteSale(WebsiteSale):
             return super(WebsiteSale, self).address(**kw)
         else:
             return self.address_add_billing(**kw)
+
+    # By passing the direct to confirm cart in checkout
+    # Always redirect to address, no express
+    @http.route(['/shop/checkout'], type='http', auth="public", website=True, sitemap=False)
+    def checkout(self, **post):
+        if post.get('express'):
+            order = request.website.sale_get_order()
+            values = self.checkout_values(**post)
+            values.update({'website_sale_order': order})
+            return request.render("website_sale.checkout", values)
+        else:
+            return super(WebsiteSale, self).checkout(**post)

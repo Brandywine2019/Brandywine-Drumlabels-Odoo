@@ -68,6 +68,14 @@ Requirement 4:
 >>Addresses are viewed in list view 
 
 
+Additional Requirements:
+
+1. Change Button behavior so that “Process Checkout” button in Shopping Cart does not skip “Address” page but always redirects to it – Upon clicking on log-in the address page should not be skipped, but it should display the default address that is stored against the contact in the database as mentioned in your point# 2 below 
+
+4. Move box “Shipping instructions” to section below “Delivery Method” selection
+
+5. Hide the pricing values on each Delivery method
+
     """,
 
     'author': "PS-US Odoo",
