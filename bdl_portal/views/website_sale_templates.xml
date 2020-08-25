@@ -4,6 +4,7 @@
     <template id="assets_frontend" name="bdl address assets" inherit_id="website.assets_frontend">
         <xpath expr="." position="inside">
             <script type="text/javascript" src="/bdl_portal/static/src/js/website_sale_address.js"></script>
+            <script type="text/javascript" src="/bdl_portal/static/src/js/payment_form.js"></script>
         </xpath>
     </template>
 
@@ -123,11 +124,27 @@
     </template>
 
     <template id="address_bdl" inherit_id="website_sale.address">
-        <xpath expr="//h2[hasclass('o_page_header')][1]/.." position="before">
+        <xpath expr="//h2[hasclass('o_page_header')][1]/.." position="replace">
+            <!-- Add Add Billing Address Page header -->
             <t t-if="mode == ('add', 'billing')">
                 <h2 class="o_page_header mt8">Billing Address</h2>
             </t>
+            <!-- Change Your Address to Billing Address -->
+            <t t-if="mode == ('new', 'billing')">
+                <h2 class="o_page_header mt8">Billing Address
+                    <small> or </small>
+                    <a role="button" href='/web/login?redirect=/shop/checkout' class='btn btn-primary' style="margin-top: -11px">Log In</a>
+                </h2>
+            </t>
         </xpath>
+<!--        <xpath expr="//div[hasclass('col-12', 'col-xl', 'order-xl-1', 'oe_cart')]//t[3]//h2" position="replace">-->
+<!--            <h2 name="test_here" class="o_page_header mt8">Billing Address</h2>-->
+<!--        </xpath>-->
+<!--        <xpath expr="//h2[hasclass('o_page_header')][1]/.." position="after">-->
+<!--            <t t-if="mode == ('add', 'billing')">-->
+<!--                <h2 class="o_page_header mt8">Billing Address</h2>-->
+<!--            </t>-->
+<!--        </xpath>-->
         <xpath expr="//t[@t-if='partner_id == website_sale_order.partner_shipping_id.id == website_sale_order.partner_invoice_id.id']"
                position="attributes">
             <attribute name="t-if">partner_id == website_sale_order.partner_shipping_id.id</attribute>
@@ -341,16 +358,45 @@
         </xpath>
     </template>
 
-    <template id="extra_info_bdl" inherit_id="website_sale.extra_info">
-        <xpath expr="//form/div[1]" position="before">
-            <div class="form-group row form-field o_website_form_custom">
-                <div class="col-lg-3 col-md-4 text-md-right">
-                    <label class="col-form-label" for="shipping_instructions">Shipping Instructions</label>
-                </div>
-                <div class="col-lg-9 col-md-8">
-                    <textarea class="form-control o_website_fsingaporeorm_input" rows="8" name="shipping_instructions"/>
+    <template id="payment_tokens_list_inherit_bdl" inherit_id="payment.payment_tokens_list">
+        <xpath expr="//div[hasclass('card')]" position="before">
+            <div class="oe_structure clearfix mt-3" id="oe_structure_website_sale_payment_2"/>
+
+            <div class="row">
+                <div class="col-lg-3 col-md-4 text-lg-left">
+                    <label class="col-form-label" for="shipping_instructions"><strong>Shipping Instructions</strong></label>
                 </div>
             </div>
+            <div class="form-group row form-field">
+                <div class="col-lg-12 col-md-10">
+                    <textarea class="form-control" rows="8" name="shipping_instructions"/>
+                </div>
+            </div>
+
+            <h3 class="mb24">Pay with </h3>
+        </xpath>
+    </template>
+
+    <template id="payment_inherit_bdl" inherit_id="website_sale.payment">
+        <xpath expr="//div[@id='payment_method']//h3[hasclass('mb24')]" position="replace"/>
+    </template>
+
+    <!-- Hide the delivery fees by replacing the sub template, cannot xpath -->
+    <template id="website_sale_delivery.payment_delivery_methods">
+        <input t-att-value="delivery.id" t-att-id="'delivery_%i' % delivery.id" type="radio" name="delivery_type" t-att-checked="order.carrier_id and order.carrier_id.id == delivery.id and 'checked' or False" t-att-class="'d-none' if delivery_nb == 1 else ''"/>
+        <label class="label-optional" t-field="delivery.name" t-att-for="'delivery_%i' % delivery.id"/>
+        <t t-if="delivery.website_description">
+            <div t-field="delivery.website_description" class="text-muted mt8"/>
+        </t>
+    </template>
+    <!-- Hide the delivery fees in cart summary -->
+    <template id="cart_delivery_inherit_bdl" inherit_id="website_sale_delivery.cart_delivery">
+        <xpath expr="//tr[@id='order_delivery']" position="replace"/>
+    </template>
+
+    <template id="payment_delivery_inherit_bdl" inherit_id="website_sale_delivery.payment_delivery">
+        <xpath expr="//div[@id='delivery_method']/.." position="after">
+            <p><strong>Delivery Fees will be charged once product is shipped</strong></p>
         </xpath>
     </template>
 </odoo>

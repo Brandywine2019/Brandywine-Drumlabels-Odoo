@@ -66,8 +66,6 @@ Requirement 4:
 >>>>User can select the new Bill or Ship address from this list (boolean field) 
 
 >>Addresses are viewed in list view 
-
-
     """,
 
     'author': "PS-US Odoo",

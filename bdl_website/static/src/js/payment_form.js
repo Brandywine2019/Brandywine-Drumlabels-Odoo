@@ -19,7 +19,7 @@ odoo.define('bld_website.payment_form', function (require) {
             var is_po = $(checked_radio).data("is-po");
 
             if (is_po ) {
-                var po_number = this.$('input[id="po_num_val"]').val();
+                var po_number = this.$('textarea[id="po_num_val"]').val();
                 if (po_number === "" || !po_number) {
                     this.displayError(
                         _t('No PO Number Entered'),
