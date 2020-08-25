@@ -263,7 +263,6 @@ class WebsiteSale(WebsiteSale):
             return False
         sale_order = request.env['sale.order'].sudo().browse(sale_order_id).exists() if sale_order_id else None
         if sale_order:
-            print("HERE IS THE DETAILS")
             sale_order.shipping_instructions = ship_instructions
         else:
             return False

@@ -358,19 +358,6 @@
         </xpath>
     </template>
 
-    <template id="extra_info_bdl" inherit_id="website_sale.extra_info">
-        <xpath expr="//form/div[1]" position="before">
-            <div class="form-group row form-field o_website_form_custom">
-                <div class="col-lg-3 col-md-4 text-md-right">
-                    <label class="col-form-label" for="shipping_instructions">Shipping Instructions</label>
-                </div>
-                <div class="col-lg-9 col-md-8">
-                    <textarea class="form-control o_website_form_input" rows="8" name="shipping_instructions"/>
-                </div>
-            </div>
-        </xpath>
-    </template>
-
     <template id="payment_tokens_list_inherit_bdl" inherit_id="payment.payment_tokens_list">
         <xpath expr="//div[hasclass('card')]" position="before">
             <div class="oe_structure clearfix mt-3" id="oe_structure_website_sale_payment_2"/>
@@ -382,7 +369,6 @@
             </div>
             <div class="form-group row form-field">
                 <div class="col-lg-12 col-md-10">
-<!--                    <input type="text" name="shipping_instructions" t-att-value="shipping_instructions" class="form-control"/>-->
                     <textarea class="form-control" rows="8" name="shipping_instructions"/>
                 </div>
             </div>
