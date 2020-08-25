@@ -17,6 +17,14 @@ Log-in to the portal as a portal user.
 If this portal user has a pricelist associated to their contact card – be able to see all products listed on the respective pricelist
 If this portal user has no pricelist associated to their contact card, they will not see any products 
 Sales reps on the backend have no restriction to add produts not associated to a specific pricelist / contact
+
+Additional Requirements:
+
+1. Change Button behavior so that “Process Checkout” button in Shopping Cart does not skip “Address” page but always redirects to it – Upon clicking on log-in the address page should not be skipped, but it should display the default address that is stored against the contact in the database as mentioned in your point# 2 below 
+
+4. Move box “Shipping instructions” to section below “Delivery Method” selection
+
+5. Hide the pricing values on each Delivery method
     """,
     'license': 'OEEL-1',
     'author': 'Odoo Inc',

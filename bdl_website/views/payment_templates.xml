@@ -16,8 +16,10 @@
         <xpath expr="//ul[hasclass('float-right', 'list-inline', 'payment_icon_list')]" position="inside">
             <t t-if="acq.is_po_num">
                 <div t-att-class="'form-group col-lg-5' if bootstrap_formatting else 'form-group'">
-                    <input type="text" name="po_num_val" id="po_num_val" class="form-control" placeholder="PO Number"
-                           t-att-data-is-po="acq.is_po_num" t-att-data-is-required="true"/>
+<!--                    <input type="text" name="po_num_val" id="po_num_val" class="form-control" placeholder="PO Number"-->
+<!--                           t-att-data-is-po="acq.is_po_num" t-att-data-is-required="true"/>-->
+                    <textarea name="po_num_val" id="po_num_val" class="form-control" placeholder="PO Number"
+                           t-att-data-is-po="acq.is_po_num" t-att-data-is-required="true" style="width:auto;"/>
                 </div>
             </t>
         </xpath>

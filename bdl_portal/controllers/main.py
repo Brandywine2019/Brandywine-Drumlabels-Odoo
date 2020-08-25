@@ -98,6 +98,11 @@ class WebsiteSale(WebsiteSale):
                                                                          order='id desc', limit=1)
                     order.partner_shipping_id.id = last_order and last_order.id
 
+                # Make sure the current shipping address is in the available ship results
+                if order.partner_shipping_id not in shippings:
+                    # set to the first address in shippings
+                    order.partner_shipping_id = shippings[0]
+
             # Billing with filter for invoice type and parent contact only
             # (A AND B) OR (C)
             # OR (A AND B) (C)
@@ -119,6 +124,10 @@ class WebsiteSale(WebsiteSale):
                     partner_id = int(kw.get('partner_id'))
                     if partner_id in billings.mapped('id'):
                         order.partner_invoice_id = partner_id
+                # Make sure the current billing address is in the available bill results
+                if order.partner_invoice_id not in billings:
+                    # set to the first address in billings
+                    order.partner_invoice_id = billings[0]
 
             values.update({'bill_search': bill_search,
                            'ship_search': ship_search})
@@ -246,3 +255,16 @@ class WebsiteSale(WebsiteSale):
             return request.render("website_sale.checkout", values)
         else:
             return super(WebsiteSale, self).checkout(**post)
+
+    @http.route(['/payment/ship_instructions'], type='json', auth='public')
+    def set_po_num_sale(self, ship_instructions):
+        sale_order_id = request.session.get('sale_order_id')
+        if not sale_order_id:
+            return False
+        sale_order = request.env['sale.order'].sudo().browse(sale_order_id).exists() if sale_order_id else None
+        if sale_order:
+            print("HERE IS THE DETAILS")
+            sale_order.shipping_instructions = ship_instructions
+        else:
+            return False
+        return True
