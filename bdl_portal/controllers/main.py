@@ -72,6 +72,16 @@ class WebsiteSale(WebsiteSale):
         billings = []
         shippings = []
 
+        # Handle case where user is only Client User and not admin
+        if not request.env.user.has_group('bdl_portal.group_portal_admin'):
+            order.partner_invoice_id = order.partner_id
+            order.partner_shipping_id = order.partner_id
+            values.update({
+                'shippings': [order.partner_id],
+                'billings': [order.partner_id],
+            })
+            return values
+
         if order.partner_id != request.website.user_id.sudo().partner_id:
             Partner = order.partner_id.with_context(show_address=1).sudo()
 
@@ -99,9 +109,9 @@ class WebsiteSale(WebsiteSale):
                     order.partner_shipping_id.id = last_order and last_order.id
 
                 # Make sure the current shipping address is in the available ship results
-                if order.partner_shipping_id not in shippings:
+                # if order.partner_shipping_id not in shippings:
+                #     shippings = shippings[:-1] + order.partner_shipping_id
                     # set to the first address in shippings
-                    order.partner_shipping_id = shippings[0]
 
             # Billing with filter for invoice type and parent contact only
             # (A AND B) OR (C)
@@ -125,9 +135,9 @@ class WebsiteSale(WebsiteSale):
                     if partner_id in billings.mapped('id'):
                         order.partner_invoice_id = partner_id
                 # Make sure the current billing address is in the available bill results
-                if order.partner_invoice_id not in billings:
-                    # set to the first address in billings
-                    order.partner_invoice_id = billings[0]
+                # if order.partner_invoice_id not in billings:
+                #     # set to the first address in billings
+                #     order.partner_invoice_id = billings[0]
 
             values.update({'bill_search': bill_search,
                            'ship_search': ship_search})
