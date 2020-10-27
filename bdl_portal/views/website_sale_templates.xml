@@ -156,12 +156,12 @@
     </template>
 
     <template id="bill_address_search" name="Address Search Box">
-        <form action="/shop/checkout" method="get"
-              t-att-class="_classes">
+        <form action="/shop/checkout" method="get" t-att-class="_classes">
             <div class="input-group">
                 <input type="text" name="bill_search" class="search-query form-control oe_search_box"
                        placeholder="Search..."
                        t-att-value="bill_search"/>
+                <input type="hidden" name="ship_search" t-att-value="ship_search"/>
                 <div class="input-group-append">
                     <button type="submit" class="btn btn-secondary oe_search_button" aria-label="Search" title="Search">
                         <i class="fa fa-search"/>
@@ -172,12 +172,12 @@
     </template>
 
     <template id="ship_address_search" name="Address Search Box">
-        <form action="/shop/checkout" method="get"
-              t-att-class="_classes">
+        <form action="/shop/checkout" method="get" t-att-class="_classes">
             <div class="input-group">
                 <input type="text" name="ship_search" class="search-query form-control oe_search_box"
                        placeholder="Search..."
                        t-att-value="ship_search"/>
+                <input type="hidden" name="bill_search" t-att-value="bill_search"/>
                 <div class="input-group-append">
                     <button type="submit" class="btn btn-secondary oe_search_button" aria-label="Search" title="Search">
                         <i class="fa fa-search"/>
@@ -204,7 +204,7 @@
             </div>
             <div class="address_search_box">
                 <t t-call="bdl_portal.bill_address_search">
-                    <t t-set="_classes">o_website_sale_search</t>
+                    <t t-set="_classes">o_website_bill_search</t>
                 </t>
             </div>
             <div class="row all_billing">
@@ -352,7 +352,7 @@
         <xpath expr="//div[hasclass('row', 'all_shipping')]" position="before">
             <div class="address_search_box">
                 <t t-call="bdl_portal.ship_address_search">
-                    <t t-set="_classes">o_website_sale_search</t>
+                    <t t-set="_classes">o_website_ship_search</t>
                 </t>
             </div>
         </xpath>
