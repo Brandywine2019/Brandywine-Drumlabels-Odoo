@@ -86,13 +86,13 @@ class WebsiteSale(WebsiteSale):
             Partner = order.partner_id.with_context(show_address=1).sudo()
 
             # Change shipping addresses by changing domain and resetting shippings
-            # (child of commercial id and of type delivery) OR parent contact
+            # (child of commercial id and of type delivery) OR parent contact OR current contact
 
             ship_search = kw.get('ship_search', [])
             ship_domain = self._get_address_domain(ship_search)
             shippings = Partner.search([
-                '|', '&', ("id", "child_of", order.partner_id.commercial_partner_id.ids),
-                ("type", "in", ["delivery"]), ("id", "=", order.partner_id.parent_id.id)
+                '|', '|', '&', ("id", "child_of", order.partner_id.commercial_partner_id.ids),
+                ("type", "in", ["delivery"]), ("id", "=", order.partner_id.parent_id.id), ("id", "=", order.partner_id.id)
             ] + ship_domain, limit=6, order='id desc')
 
             if shippings:
@@ -109,8 +109,8 @@ class WebsiteSale(WebsiteSale):
                     order.partner_shipping_id.id = last_order and last_order.id
 
                 # Make sure the current shipping address is in the available ship results
-                # if order.partner_shipping_id not in shippings:
-                #     shippings = shippings[:-1] + order.partner_shipping_id
+                if order.partner_shipping_id not in shippings:
+                    shippings = shippings[:-1] + order.partner_shipping_id
                     # set to the first address in shippings
 
             # Billing with filter for invoice type and parent contact only
@@ -123,8 +123,8 @@ class WebsiteSale(WebsiteSale):
             bill_domain = self._get_address_domain(bill_search)
             # billings = Partner.search(search_domain)
             billings = Partner.search([
-                '|', '&', ("id", "child_of", order.partner_id.commercial_partner_id.ids),
-                ("type", "in", ["invoice"]), ("id", "=", order.partner_id.parent_id.id)
+                '|', '|', '&', ("id", "child_of", order.partner_id.commercial_partner_id.ids),
+                ("type", "in", ["invoice"]), ("id", "=", order.partner_id.parent_id.id), ("id", "=", order.partner_id.id),
                 # '|', ("type", "in", ["invoice"]), ("id", "=", order.partner_id.commercial_partner_id.id)
                 # original line below
                 # '|', ("type", "in", ["invoice", "contact"]), ("id", "=", order.partner_id.commercial_partner_id.id)
@@ -135,9 +135,9 @@ class WebsiteSale(WebsiteSale):
                     if partner_id in billings.mapped('id'):
                         order.partner_invoice_id = partner_id
                 # Make sure the current billing address is in the available bill results
-                # if order.partner_invoice_id not in billings:
-                #     # set to the first address in billings
-                #     order.partner_invoice_id = billings[0]
+                if order.partner_invoice_id not in billings:
+                    # set to the first address in billings
+                    billings = billings[:-1] + order.partner_invoice_id
 
             values.update({'bill_search': bill_search,
                            'ship_search': ship_search})
