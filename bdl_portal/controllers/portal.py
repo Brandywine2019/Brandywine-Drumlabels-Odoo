@@ -4,6 +4,7 @@ from odoo import http, fields, _
 from odoo.http import request
 from odoo.addons.portal.controllers.portal import CustomerPortal
 
+
 class CustomerPortal(CustomerPortal):
     
     @http.route(['/my/account'], type='http', auth='user', website=True)
