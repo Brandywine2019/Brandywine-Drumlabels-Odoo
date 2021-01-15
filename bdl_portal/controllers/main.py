@@ -216,7 +216,6 @@ class WebsiteSale(WebsiteSale):
 
                 if mode[0] == 'add' and partner_id and partner_id != -1:
                     order.partner_invoice_id = partner_id
-                    # print(order.partner_id, order.partner_invoice_id)
                     # order.partner_id = partner_id
                 # order.onchange_partner_id()
                 if not kw.get('use_same'):
