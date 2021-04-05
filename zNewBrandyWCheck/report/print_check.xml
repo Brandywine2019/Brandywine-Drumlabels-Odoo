@@ -121,11 +121,11 @@
                     <div class="check_memo">Memo</div>
                     <div class="ckus_memo" t-esc="page['memo']"/>
                 </t>
-                <div class="check_routing_account">
+                <!-- <div class="check_routing_account">
                     <t t-esc="o.check_number"/>
                     <t t-esc="o.journal_id.bank_account_id.aba_routing"/>
                     <t t-esc="o.journal_id.bank_account_id.acc_number"/>
-                </div>
+                </div> -->
             </div>
         </template>
     </data>
