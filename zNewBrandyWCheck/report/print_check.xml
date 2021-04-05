@@ -16,14 +16,14 @@
                     <div class="o-watermark">VOID</div>
                 </t>
 
-                <div class="sequence_number" t-esc="o.check_number"/>
+                <!-- <div class="sequence_number" t-esc="o.check_number"/>
                 <div class="ckus_payee_bank text-left">
                     <span t-esc="o.journal_id.bank_id.name"/>
                 </div>
                 <div class="text_design text-center">
                     <span class="text_decorate">72-2151</span><br/>
                     <span>739</span>
-                </div>
+                </div> -->
                 <div class="sequence_number" t-if="page['sequence_number'] and page['manual_sequencing']"
                  t-esc="page['sequence_number']"/>
                 <div class="ckus_amount">
@@ -66,7 +66,7 @@
                 <div class="check_routing_account">
                     <t t-esc="o.journal_id.bank_account_id.aba_routing"/>
                     <t t-esc="o.journal_id.bank_account_id.acc_number"/>
-                    <t t-esc="o.check_number"/>
+                    <!-- <t t-esc="o.check_number"/> -->
                 </div>
                 <div class="text-right" style="">
                     <img src="/zNewBrandyWCheck/static/description/btr.bmp" style="max-height:32pt; position: absolute;margin-top: 2.0in;margin-left: 5.0in;" alt="signature"/>
