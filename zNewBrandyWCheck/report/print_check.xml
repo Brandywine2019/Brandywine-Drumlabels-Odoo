@@ -63,11 +63,7 @@
                         <span t-esc="page['memo']"/>
                     </div>
                 </t>
-                <div class="check_routing_account">
-                    <t t-esc="o.journal_id.bank_account_id.aba_routing"/>
-                    <t t-esc="o.journal_id.bank_account_id.acc_number"/>
-                    <!-- <t t-esc="o.check_number"/> -->
-                </div>
+                
                 <div class="text-right" style="">
                     <img src="/zNewBrandyWCheck/static/description/btr.bmp" style="max-height:32pt; position: absolute;margin-top: 2.0in;margin-left: 5.0in;" alt="signature"/>
                 </div>
