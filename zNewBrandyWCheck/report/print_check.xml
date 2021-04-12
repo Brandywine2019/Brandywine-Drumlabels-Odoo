@@ -24,8 +24,6 @@
                     <span class="text_decorate">72-2151</span><br/>
                     <span>739</span>
                 </div> -->
-                <div class="sequence_number" t-if="page['sequence_number'] and page['manual_sequencing']"
-                 t-esc="page['sequence_number']"/>
                 <div class="ckus_amount">
                     <br/><strong class="check_margin">
                         <t t-esc="o.currency_id.symbol"/>
@@ -33,9 +31,6 @@
                     <t t-esc="page['amount'].replace(o.currency_id.symbol, '')"/>
                 </div>
                 <div class="ckus_amount_in_word" t-esc="page['amount_in_word']"/>
-                <!-- <div class="check_custom_pay">
-                    Pay to the Order of:
-                </div> -->
                 <div class="check_partner_name_of_Us">
                     <t t-esc="o.partner_id.name"/>
                 </div>
@@ -48,22 +43,19 @@
                 <!-- <div class="ckus_amount_text">AMOUNT</div> -->
                 <br/>
                 <div class="ckus_payee_addr text-left">
-                    <!-- <span class="check_heading_partner">
-                        <t t-esc="o.partner_id.name"/>
-                    </span> -->
-                    <p class="check_margin0">
-                        <t t-esc="o.partner_id.street"/>
-                    </p>
-                    <t t-esc="o.partner_id.city"/>,
-
-                    <t t-esc="o.partner_id.state_id.code"/>
-                    <t t-esc="o.partner_id.zip"/></div>
+                    <span t-esc="o.partner_id.street"/>
+                    <br/>
+                    <span>
+                        <t t-esc="o.partner_id.city"/>,
+                        <t t-esc="o.partner_id.state_id.code"/>
+                        <t t-esc="o.partner_id.zip"/>
+                    </span>
+                </div>
                 <t t-if="page['memo']">
                     <div class="check_memo">
                         <span t-esc="page['memo']"/>
                     </div>
                 </t>
-                
                 <div class="text-right" style="">
                     <img src="/zNewBrandyWCheck/static/description/btr.bmp" style="max-height:32pt; position: absolute;margin-top: 2.0in;margin-left: 5.0in;" alt="signature"/>
                 </div>
@@ -72,16 +64,8 @@
 
         <template id="ckus_stub_extended" inherit_id="l10n_us_check_printing.ckus_stub">
             <xpath expr="//div[hasclass('summary_line')]" position="replace">
-                <div class="row summary_line">
-                    <div class="col-6 text-left">
-                        <span t-esc="page['partner_name']"/>
-                    </div>
-                </div>
             </xpath>
             <xpath expr="//div[hasclass('stub_total_amount')]" position="replace">
-                <div class="stub_total_amount">
-                    <t t-esc="o.check_number"/>
-                </div>
             </xpath>
         </template>
 

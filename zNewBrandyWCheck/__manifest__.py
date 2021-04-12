@@ -4,7 +4,7 @@
     'name': "Check Customization",
     'author': 'Captivea',
     'website': 'www.captivea.us',
-    'version': '12.0.0.0.2',
+    'version': '12.0.0.0.3',
     'category': 'Sales',
     'summary': """Check Customization""",
     'license': 'AGPL-3',
