@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="acquirer_form_po_number_bdl" model="ir.ui.view">
+        <field name="name">acquirer.form.po.number</field>
+        <field name="model">payment.acquirer</field>
+        <field name="inherit_id" ref="payment.acquirer_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='acquirer_config']" position="inside">
+                <field name="is_po_num" attrs="{'invisible':1}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!--View for wizard-->
+    <record id="view_account_payment_from_invoices_inherit_bdl" model="ir.ui.view">
+        <field name="name">view.account.payment.from.invoices.inherit.bdl</field>
+        <field name="model">account.payment.register</field>
+        <field name="inherit_id" ref="account.view_account_payment_register_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='payment_method_code']" position="after">
+                <field name="payment_token_id"
+                       attrs="{'invisible': ['|', ('payment_method_code', '!=', 'electronic'), ('payment_type', '=', 'transfer')], 'required': [('payment_method_code', '=', 'electronic')]}"
+                       options="{'no_create': True}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
