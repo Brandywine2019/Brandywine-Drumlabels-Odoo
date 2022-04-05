@@ -1,1 +1,1 @@
-clear 2
+clear 4
