@@ -7,7 +7,8 @@ from odoo.exceptions import UserError, ValidationError
 class SaleOrder(models.Model):
     _inherit = "sale.order"
     
-    shipping_instructions = fields.Text('Shipping Instructions', track_visibility='onchange')
+    #shipping_instructions = fields.Text('Shipping Instructions', track_visibility='onchange') -- WSP EDITED 4.5.22
+    shipping_instructions = fields.Text('Shipping Instructions', tracking=True)
 
     def _check_carrier_quotation(self, force_carrier_id=None):
         # call Super to change delivery fee to 0.0
