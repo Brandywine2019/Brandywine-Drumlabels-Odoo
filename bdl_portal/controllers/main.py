@@ -29,8 +29,8 @@ class WebsiteSale(WebsiteSale):
             domain = []
         return domain
 
-    def _get_search_domain(self, search, category, attrib_values):
-        domain = super(WebsiteSale, self)._get_search_domain(search, category, attrib_values)
+    def _get_search_domain(self, search, category, attrib_values, search_in_description=True):
+        domain = super(WebsiteSale, self)._get_search_domain(search, category, attrib_values, search_in_description=search_in_description)
 
         if not request.env.user.has_group('base.group_user'):
             additional_domain = self._get_domain_based_on_valid_product_tmpl_ids(
